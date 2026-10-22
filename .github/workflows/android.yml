@@ -2,7 +2,7 @@ name: Build DreamStream Ultra APK
 
 on:
   workflow_dispatch:
-  push:
+  push: 
     branches: [ "main" ]
 
 permissions:
