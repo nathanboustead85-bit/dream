@@ -1,19 +1,22 @@
 package com.dreamstream.app
 
-import android.app.Activity
 import android.graphics.Color
 import android.os.Bundle
+import android.view.Gravity
 import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 
-class MainActivity : Activity() {
+class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val tv = TextView(this)
-        tv.text = "DreamStream Ultra"
-        tv.textSize = 24f
-        tv.setTextColor(Color.WHITE)
+        val tv = TextView(this).apply {
+            text = "DreamStream Ultra"
+            textSize = 24f
+            setTextColor(Color.WHITE)
+            gravity = Gravity.CENTER
+        }
 
         setContentView(tv)
     }
