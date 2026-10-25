@@ -20,7 +20,6 @@ import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
-import kotlinx.coroutines.delay
 
 @Composable
 fun PlayerScreen(
@@ -29,28 +28,23 @@ fun PlayerScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
-
     var isLoading by remember { mutableStateOf(true) }
     var hasError by remember { mutableStateOf(false) }
     var errorMessage by remember { mutableStateOf("") }
-    var showControls by remember { mutableStateOf(true) }
 
     val exoPlayer = remember {
         ExoPlayer.Builder(context).build().apply {
             setMediaItem(MediaItem.fromUri(streamUrl))
             prepare()
             playWhenReady = true
-            repeatMode = Player.REPEAT_MODE_OFF
         }
     }
 
-    DisposableEffect(exoPlayer) {
+    DisposableEffect(Unit) {
         val listener = object : Player.Listener {
-            override fun onPlaybackStateChanged(playbackState: Int) {
-                isLoading = playbackState == Player.STATE_BUFFERING || playbackState == Player.STATE_IDLE
-                if (playbackState == Player.STATE_READY) {
-                    hasError = false
-                }
+            override fun onPlaybackStateChanged(state: Int) {
+                isLoading = state == Player.STATE_BUFFERING || state == Player.STATE_IDLE
+                if (state == Player.STATE_READY) hasError = false
             }
 
             override fun onPlayerError(error: PlaybackException) {
@@ -60,42 +54,27 @@ fun PlayerScreen(
             }
         }
         exoPlayer.addListener(listener)
-
         onDispose {
             exoPlayer.removeListener(listener)
             exoPlayer.release()
         }
     }
 
-    // Auto-hide top bar after 4 seconds
-    LaunchedEffect(showControls) {
-        if (showControls && !hasError) {
-            delay(4000)
-            showControls = false
-        }
-    }
-
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Black)
-    ) {
+    Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
         AndroidView(
             factory = {
                 PlayerView(context).apply {
                     player = exoPlayer
+                    useController = true
                     layoutParams = FrameLayout.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT
                     )
-                    useController = true
-                    setShowBuffering(PlayerView.SHOW_BUFFERING_WHEN_PLAYING)
                 }
             },
             modifier = Modifier.fillMaxSize()
         )
 
-        // Loading spinner
         if (isLoading && !hasError) {
             CircularProgressIndicator(
                 color = Color(0xFF00E5FF),
@@ -103,26 +82,15 @@ fun PlayerScreen(
             )
         }
 
-        // Error overlay
         if (hasError) {
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.7f)),
+                modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.7f)),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text(
-                    text = "Playback Error",
-                    color = Color.White,
-                    fontSize = 20.sp
-                )
+                Text("Playback Error", color = Color.White, fontSize = 20.sp)
                 Spacer(Modifier.height(8.dp))
-                Text(
-                    text = errorMessage,
-                    color = Color.Gray,
-                    fontSize = 14.sp
-                )
+                Text(errorMessage, color = Color.Gray, fontSize = 14.sp)
                 Spacer(Modifier.height(24.dp))
                 TextButton(onClick = {
                     hasError = false
@@ -130,9 +98,9 @@ fun PlayerScreen(
                     exoPlayer.prepare()
                     exoPlayer.play()
                 }) {
-                    Text("Retry", color = Color(0xFF00E5FF), fontSize = 16.sp)
+                    Text("Retry", color = Color(0xFF00E5FF))
                 }
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.height(8.dp))
                 TextButton(onClick = onBack) {
                     Text("Go Back", color = Color.White)
                 }
@@ -140,27 +108,19 @@ fun PlayerScreen(
         }
 
         // Top bar
-        if (showControls || hasError) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .background(Color.Black.copy(alpha = 0.6f))
-                    .padding(12.dp)
-                    .align(Alignment.TopStart),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TextButton(onClick = onBack) {
-                    Text("← Back", color = Color.White, fontSize = 16.sp)
-                }
-                Spacer(Modifier.width(12.dp))
-                Text(
-                    text = title,
-                    color = Color.White,
-                    fontSize = 16.sp,
-                    maxLines = 1,
-                    modifier = Modifier.weight(1f)
-                )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(Color.Black.copy(alpha = 0.5f))
+                .padding(12.dp)
+                .align(Alignment.TopStart),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TextButton(onClick = onBack) {
+                Text("← Back", color = Color.White)
             }
+            Spacer(Modifier.width(12.dp))
+            Text(text = title, color = Color.White, maxLines = 1)
         }
     }
 }
