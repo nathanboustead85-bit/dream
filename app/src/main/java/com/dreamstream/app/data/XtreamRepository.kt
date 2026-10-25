@@ -35,13 +35,7 @@ class XtreamRepository(
     suspend fun getVodStreams(categoryId: String? = null) =
         api().getVodStreams(username, password, categoryId = categoryId)
 
-    fun liveStreamUrl(streamId: Int): String {
-        val clean = baseUrl.trimEnd('/')
-        return "$clean/live/$username/$password/$streamId.ts"
-    }
-
-    fun vodStreamUrl(streamId: Int, ext: String = "mp4"): String {
-        val clean = baseUrl.trimEnd('/')
-        return "$clean/movie/$username/$password/$streamId.$ext"
-    }
-}
+    suspend fun getSeriesCategories() = api().getSeriesCategories(username, password)
+    suspend fun getSeries(categoryId: String? = null) =
+        api().getSeries(username, password, categoryId = categoryId)
+    suspend fun getSeriesInfo(seriesId: Int) =
