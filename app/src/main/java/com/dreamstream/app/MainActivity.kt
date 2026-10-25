@@ -94,16 +94,49 @@ class MainActivity : ComponentActivity() {
                 }
 
                 composable("series") {
-                    SeriesScreen(
-                        viewModel = viewModel,
-                        onSeriesClick = { series ->
-                            // For now just show the series name. 
-                            // Full episode browser can be added later.
-                        },
-                        onBack = { navController.popBackStack() }
-                    )
-                }
+    SeriesScreen(
+        viewModel = viewModel,
+        onSeriesClick = { series ->
+            // We pass the series_id and name via navigation
+            val encodedName = URLEncoder.encode(series.name, StandardCharsets.UTF_8.toString())
+            navController.navigate("series_detail/${series.series_id}/$encodedName")
+        },
+        onBack = { navController.popBackStack() }
+    )
+}
 
+composable(
+    route = "series_detail/{seriesId}/{name}",
+    arguments = listOf(
+        navArgument("seriesId") { type = NavType.IntType },
+        navArgument("name") { type = NavType.StringType }
+    )
+) { backStackEntry ->
+    val seriesId = backStackEntry.arguments?.getInt("seriesId") ?: 0
+    val name = URLDecoder.decode(
+        backStackEntry.arguments?.getString("name") ?: "Series",
+        StandardCharsets.UTF_8.toString()
+    )
+
+    val series = Series(name = name, series_id = seriesId)
+
+    SeriesDetailScreen(
+        viewModel = viewModel,
+        series = series,
+        onEpisodeClick = { episode ->
+            val url = viewModel.getSeriesEpisodeUrl(episode.id)
+            if (url != null) {
+                val encodedTitle = URLEncoder.encode(
+                    episode.title ?: "Episode ${episode.episode_num}",
+                    StandardCharsets.UTF_8.toString()
+                )
+                val encodedUrl = URLEncoder.encode(url, StandardCharsets.UTF_8.toString())
+                navController.navigate("player/$encodedTitle/$encodedUrl")
+            }
+        },
+        onBack = { navController.popBackStack() }
+    )
+}
                 composable(
                     route = "player/{title}/{url}",
                     arguments = listOf(
