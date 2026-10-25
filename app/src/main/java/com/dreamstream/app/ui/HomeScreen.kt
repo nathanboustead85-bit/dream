@@ -16,6 +16,7 @@ fun HomeScreen(
     viewModel: MainViewModel,
     onLiveClick: () -> Unit,
     onMoviesClick: () -> Unit,
+    onSeriesClick: () -> Unit,
     onLogout: () -> Unit
 ) {
     val account by viewModel.accountInfo.collectAsState()
@@ -43,7 +44,7 @@ fun HomeScreen(
         Spacer(Modifier.height(12.dp))
         MenuButton("Movies", onMoviesClick)
         Spacer(Modifier.height(12.dp))
-        MenuButton("Series (coming soon)") { }
+        MenuButton("Series", onSeriesClick)
         Spacer(Modifier.height(12.dp))
         MenuButton("Favourites (coming soon)") { }
 
