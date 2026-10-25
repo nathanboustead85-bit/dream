@@ -53,6 +53,7 @@ class MainActivity : ComponentActivity() {
                         viewModel = viewModel,
                         onLiveClick = { navController.navigate("live") },
                         onMoviesClick = { navController.navigate("movies") },
+                        onSeriesClick = { navController.navigate("series") },
                         onLogout = {
                             viewModel.logout()
                             navController.navigate("login") {
@@ -87,6 +88,17 @@ class MainActivity : ComponentActivity() {
                                 val encodedUrl = URLEncoder.encode(url, StandardCharsets.UTF_8.toString())
                                 navController.navigate("player/$encodedTitle/$encodedUrl")
                             }
+                        },
+                        onBack = { navController.popBackStack() }
+                    )
+                }
+
+                composable("series") {
+                    SeriesScreen(
+                        viewModel = viewModel,
+                        onSeriesClick = { series ->
+                            // For now just show the series name. 
+                            // Full episode browser can be added later.
                         },
                         onBack = { navController.popBackStack() }
                     )
