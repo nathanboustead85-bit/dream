@@ -38,6 +38,7 @@ fun LiveChannelsScreen(
             .fillMaxSize()
             .background(Color(0xFF050508))
     ) {
+        // Top bar
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -55,8 +56,11 @@ fun LiveChannelsScreen(
             )
         }
 
+        // Category chips
         if (categories.isNotEmpty()) {
-            LazyRow(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+            LazyRow(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+            ) {
                 item {
                     FilterChip(
                         selected = selectedCategory == null,
