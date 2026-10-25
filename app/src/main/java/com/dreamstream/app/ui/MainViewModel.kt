@@ -35,6 +35,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
     private val _vodStreams = MutableStateFlow<List<VodStream>>(emptyList())
     val vodStreams: StateFlow<List<VodStream>> = _vodStreams.asStateFlow()
 
+    private val _seriesCategories = MutableStateFlow<List<Category>>(emptyList())
+    val seriesCategories: StateFlow<List<Category>> = _seriesCategories.asStateFlow()
+
+    private val _seriesList = MutableStateFlow<List<Series>>(emptyList())
+    val seriesList: StateFlow<List<Series>> = _seriesList.asStateFlow()
+
     private var repository: XtreamRepository? = null
 
     val savedServer = prefs.server.stateIn(viewModelScope, SharingStarted.Eagerly, "http://vpn-esxtrapro.info:80")
@@ -45,23 +51,49 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             _uiState.value = UiState.Loading
             try {
-                val repo = XtreamRepository(server, username, password)
+                var cleanServer = server.trim()
+                if (!cleanServer.startsWith("http://") && !cleanServer.startsWith("https://")) {
+                    cleanServer = "http://$cleanServer"
+                }
+                cleanServer = cleanServer.trimEnd('/')
+
+                val repo = XtreamRepository(cleanServer, username.trim(), password)
                 val info = repo.login()
 
-                if (info.user_info?.auth != 1 && info.user_info?.status?.lowercase() != "active") {
-                    _uiState.value = UiState.Error("Login failed. Check credentials or account status.")
+                val userInfo = info.user_info
+                val isAuthorized = userInfo?.auth == 1 ||
+                        userInfo?.status?.equals("Active", ignoreCase = true) == true ||
+                        userInfo?.status?.equals("active", ignoreCase = true) == true
+
+                if (userInfo == null) {
+                    _uiState.value = UiState.Error("Invalid response from server. Check server address.")
+                    return@launch
+                }
+
+                if (!isAuthorized) {
+                    _uiState.value = UiState.Error(
+                        "Login failed. Status: ${userInfo.status ?: "Unknown"}"
+                    )
                     return@launch
                 }
 
                 repository = repo
-                prefs.saveCredentials(server, username, password)
+                prefs.saveCredentials(cleanServer, username.trim(), password)
                 _accountInfo.value = info
                 _uiState.value = UiState.LoggedIn
 
                 loadLiveCategories()
                 loadVodCategories()
+                loadSeriesCategories()
             } catch (e: Exception) {
-                _uiState.value = UiState.Error(e.message ?: "Connection error")
+                val message = when {
+                    e.message?.contains("Unable to resolve host", ignoreCase = true) == true ->
+                        "Cannot reach server. Check the server address."
+                    e.message?.contains("timeout", ignoreCase = true) == true ->
+                        "Connection timeout. Server may be slow or down."
+                    else -> e.message ?: "Connection error"
+                }
+                _uiState.value = UiState.Error(message)
             }
         }
     }
@@ -108,8 +140,29 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun loadSeriesCategories() {
+        viewModelScope.launch {
+            try {
+                _seriesCategories.value = repository?.getSeriesCategories() ?: emptyList()
+            } catch (_: Exception) { }
+        }
+    }
+
+    fun loadSeries(categoryId: String? = null) {
+        viewModelScope.launch {
+            _uiState.value = UiState.Loading
+            try {
+                _seriesList.value = repository?.getSeries(categoryId) ?: emptyList()
+                _uiState.value = UiState.LoggedIn
+            } catch (e: Exception) {
+                _uiState.value = UiState.Error(e.message ?: "Failed to load series")
+            }
+        }
+    }
+
     fun getLiveUrl(streamId: Int): String? = repository?.liveStreamUrl(streamId)
     fun getVodUrl(streamId: Int): String? = repository?.vodStreamUrl(streamId)
+    fun getSeriesEpisodeUrl(episodeId: String): String? = repository?.seriesEpisodeUrl(episodeId)
 
     fun logout() {
         viewModelScope.launch {
@@ -120,6 +173,8 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             _liveStreams.value = emptyList()
             _vodCategories.value = emptyList()
             _vodStreams.value = emptyList()
+            _seriesCategories.value = emptyList()
+            _seriesList.value = emptyList()
             _uiState.value = UiState.Idle
         }
     }
