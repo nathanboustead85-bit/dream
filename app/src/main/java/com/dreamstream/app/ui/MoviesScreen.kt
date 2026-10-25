@@ -56,7 +56,9 @@ fun MoviesScreen(
         }
 
         if (categories.isNotEmpty()) {
-            LazyRow(modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+            LazyRow(
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+            ) {
                 item {
                     FilterChip(
                         selected = selectedCategory == null,
