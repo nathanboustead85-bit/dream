@@ -47,3 +47,45 @@ data class VodStream(
     val rating: String? = null,
     val category_id: String? = null
 )
+data class Series(
+    val num: Int = 0,
+    val name: String,
+    val series_id: Int,
+    val cover: String? = null,
+    val plot: String? = null,
+    val cast: String? = null,
+    val director: String? = null,
+    val genre: String? = null,
+    val releaseDate: String? = null,
+    val rating: String? = null,
+    val category_id: String? = null
+)
+
+data class Season(
+    val air_date: String? = null,
+    val episode_count: Int = 0,
+    val id: Int = 0,
+    val name: String? = null,
+    val season_number: Int = 0
+)
+
+data class Episode(
+    val id: String,
+    val episode_num: Int = 0,
+    val title: String? = null,
+    val container_extension: String? = null,
+    val info: EpisodeInfo? = null
+)
+
+data class EpisodeInfo(
+    val movie_image: String? = null,
+    val plot: String? = null,
+    val duration_secs: Int = 0,
+    val duration: String? = null
+)
+
+data class SeriesInfo(
+    val seasons: List<Season>? = null,
+    val info: Series? = null,
+    val episodes: Map<String, List<Episode>>? = null
+)
