@@ -5,15 +5,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
 import androidx.compose.runtime.*
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import com.dreamstream.app.ui.*
-import java.net.URLDecoder
-import java.net.URLEncoder
-import java.nio.charset.StandardCharsets
 
 class MainActivity : ComponentActivity() {
     private val viewModel: MainViewModel by viewModels()
@@ -51,8 +46,8 @@ class MainActivity : ComponentActivity() {
                 composable("home") {
                     HomeScreen(
                         viewModel = viewModel,
-                        onLiveClick = { navController.navigate("live") },
-                        onMoviesClick = { navController.navigate("movies") },
+                        onLiveClick = { /* temporarily disabled */ },
+                        onMoviesClick = { /* temporarily disabled */ },
                         onLogout = {
                             viewModel.logout()
                             navController.navigate("login") {
@@ -61,7 +56,7 @@ class MainActivity : ComponentActivity() {
                         }
                     )
                 }
-
-                composable("live") {
-                    LiveChannelsScreen(
-                        viewModel
+            }
+        }
+    }
+}
