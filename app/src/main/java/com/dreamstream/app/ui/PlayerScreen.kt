@@ -44,7 +44,6 @@ fun PlayerScreen(
         }
     }
 
-    // Player listener
     DisposableEffect(exoPlayer) {
         val listener = object : Player.Listener {
             override fun onPlaybackStateChanged(playbackState: Int) {
@@ -68,5 +67,100 @@ fun PlayerScreen(
         }
     }
 
-    // Auto-hide controls after 4 seconds
-    La
+    // Auto-hide top bar after 4 seconds
+    LaunchedEffect(showControls) {
+        if (showControls && !hasError) {
+            delay(4000)
+            showControls = false
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+    ) {
+        AndroidView(
+            factory = {
+                PlayerView(context).apply {
+                    player = exoPlayer
+                    layoutParams = FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.MATCH_PARENT
+                    )
+                    useController = true
+                    setShowBuffering(PlayerView.SHOW_BUFFERING_WHEN_PLAYING)
+                }
+            },
+            modifier = Modifier.fillMaxSize()
+        )
+
+        // Loading spinner
+        if (isLoading && !hasError) {
+            CircularProgressIndicator(
+                color = Color(0xFF00E5FF),
+                modifier = Modifier.align(Alignment.Center)
+            )
+        }
+
+        // Error overlay
+        if (hasError) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.7f)),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    text = "Playback Error",
+                    color = Color.White,
+                    fontSize = 20.sp
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = errorMessage,
+                    color = Color.Gray,
+                    fontSize = 14.sp
+                )
+                Spacer(Modifier.height(24.dp))
+                TextButton(onClick = {
+                    hasError = false
+                    isLoading = true
+                    exoPlayer.prepare()
+                    exoPlayer.play()
+                }) {
+                    Text("Retry", color = Color(0xFF00E5FF), fontSize = 16.sp)
+                }
+                Spacer(Modifier.height(12.dp))
+                TextButton(onClick = onBack) {
+                    Text("Go Back", color = Color.White)
+                }
+            }
+        }
+
+        // Top bar
+        if (showControls || hasError) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(Color.Black.copy(alpha = 0.6f))
+                    .padding(12.dp)
+                    .align(Alignment.TopStart),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(onClick = onBack) {
+                    Text("← Back", color = Color.White, fontSize = 16.sp)
+                }
+                Spacer(Modifier.width(12.dp))
+                Text(
+                    text = title,
+                    color = Color.White,
+                    fontSize = 16.sp,
+                    maxLines = 1,
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
